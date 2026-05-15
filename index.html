@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O Meu Pou Árvore - Companhia</title>
+    <style>
+        :root {
+            --sky-color: #00aaff;
+            --grass-color: #8bc34a;
+            --trunk-main: #d49a56;
+            --leaf-color: #2e7d32;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; touch-action: manipulation; }
+
+        body {
+            background: linear-gradient(to bottom, var(--sky-color), #ffffff);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            transition: all 1.5s ease-in-out;
+        }
+
+        /* --- CENÁRIO --- */
+        .landscape { position: absolute; bottom: 0; width: 100%; height: 35%; z-index: 1; pointer-events: none; }
+        .hill { position: absolute; bottom: 0; border-radius: 50% 50% 0 0; transition: background 1.5s; }
+        .hill-bg { width: 150%; height: 100%; left: -25%; background: #558b2f; z-index: 1; opacity: 0.6; }
+        .hill-fg { width: 130%; height: 75%; left: -15%; background: var(--grass-color); z-index: 2; }
+
+        #sun {
+            position: absolute; top: 40px; right: 10%;
+            width: 80px; height: 80px;
+            background: #ffeb3b;
+            border-radius: 50%; z-index: 0;
+            box-shadow: 0 0 40px #fff176;
+        }
+
+        /* --- HUD --- */
+        #top-info { position: relative; z-index: 200; width: 95%; max-width: 500px; display: flex; justify-content: space-between; margin-top: 10px; }
+        .info-pill { background: rgba(255,255,255,0.9); padding: 8px 15px; border-radius: 20px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.1); font-size: 14px; }
+
+        #hud {
+            position: relative; z-index: 200; width: 95%; max-width: 500px;
+            margin-top: 10px; background: rgba(255, 255, 255, 0.9);
+            padding: 15px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+        }
+        .stat-label { font-size: 12px; font-weight: bold; margin-bottom: 2px; display: block; }
+        .bar-bg { width: 100%; height: 12px; background: #ddd; border-radius: 6px; overflow: hidden; }
+        .bar-fill { height: 100%; width: 100%; transition: width 0.4s; }
+
+        /* --- ÁRVORES --- */
+        #game-area {
+            position: relative; z-index: 50; flex-grow: 1; width: 100%;
+            display: flex; justify-content: center; align-items: flex-end;
+            gap: 20px; padding-bottom: 20px;
+        }
+
+        .tree-wrapper { position: relative; cursor: pointer; transition: transform 0.3s; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.1)); }
+        .tree-wrapper.selected { transform: scale(1.05); filter: drop-shadow(0 0 15px rgba(255,255,255,0.8)); }
+        .tree-label { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background: white; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold; display: none; }
+        .tree-wrapper.selected .tree-label { display: block; }
+
+        .tree-container { position: relative; width: 180px; height: 250px; transform-origin: bottom center; }
+        .tree-main { width: 240px; height: 320px; }
+        .tree-baby { width: 100px; height: 140px; }
+
+        #bird { position: absolute; font-size: 50px; cursor: pointer; display: none; z-index: 150; }
+        #trash { position: absolute; bottom: 18%; font-size: 40px; cursor: pointer; display: none; z-index: 100; }
+
+        /* --- BOTÕES --- */
+        #action-bar {
+            position: relative; z-index: 300; width: 100%; padding: 15px;
+            background: white; display: flex; justify-content: space-around; 
+            border-top: 2px solid #eee;
+        }
+        .action-btn {
+            background: #f8f9fa; border: 2px solid #eee; padding: 10px;
+            border-radius: 12px; cursor: pointer; display: flex; flex-direction: column; 
+            align-items: center; width: 75px; transition: 0.2s;
+        }
+        .action-btn:active { transform: scale(0.9); }
+        .action-btn.disabled { opacity: 0.5; filter: grayscale(1); pointer-events: none; }
+        .action-btn span { font-size: 10px; margin-top: 5px; font-weight: bold; }
+
+        #minigame-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 2000; display: none;
+            flex-direction: column; align-items: center; justify-content: center;
+        }
+        #mg-canvas { width: 90%; max-width: 350px; height: 450px; background: #001f3f; border-radius: 20px; position: relative; overflow: hidden; border: 4px solid #0074D9; }
+        .mg-star { position: absolute; font-size: 40px; cursor: pointer; padding: 10px; animation: fall 2.5s linear forwards; }
+        @keyframes fall { to { transform: translateY(500px); } }
+
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; text-align: center; max-width: 300px; }
+    </style>
+</head>
+<body>
+
+    <div id="sun"></div>
+
+    <div id="top-info">
+        <div class="info-pill" id="pill-season">🌸 Primavera</div>
+        <div class="info-pill" id="pill-status">🌳 Família Feliz</div>
+    </div>
+
+    <div id="hud">
+        <div><span class="stat-label">💧 Água</span><div class="bar-bg"><div id="fill-water" class="bar-fill" style="background:#2196f3"></div></div></div>
+        <div><span class="stat-label">🤎 Solo</span><div class="bar-bg"><div id="fill-food" class="bar-fill" style="background:#795548"></div></div></div>
+        <div><span class="stat-label">☀️ Sol</span><div class="bar-bg"><div id="fill-light" class="bar-fill" style="background:#ffeb3b"></div></div></div>
+        <div><span class="stat-label">❤️ Humor</span><div class="bar-bg"><div id="fill-mood" class="bar-fill" style="background:#e91e63"></div></div></div>
+    </div>
+
+    <div id="game-area">
+        <div id="trash" onclick="cleanTrash()">🥤</div>
+        <div id="bird" onclick="scareBird()">🐦</div>
+
+        <!-- Árvore Principal -->
+        <div id="wrapper-1" class="tree-wrapper selected" onclick="selectTree(1)">
+            <div class="tree-label">Árvore Pai</div>
+            <div class="tree-container tree-main" id="tree-1">
+                <div id="fruits-layer-1"></div>
+                <svg viewBox="0 0 600 600">
+                    <path d="M260,560 C260,450 270,400 280,350 L320,350 C330,400 340,450 340,560 Q300,570 260,560 Z" fill="var(--trunk-main)" />
+                    <circle cx="200" cy="250" r="95" fill="var(--leaf-color)" opacity="0.9" />
+                    <circle cx="400" cy="250" r="95" fill="var(--leaf-color)" opacity="0.9" />
+                    <circle cx="300" cy="150" r="115" fill="var(--leaf-color)" />
+                    <circle cx="285" cy="460" r="6" fill="#2c3e50" />
+                    <circle cx="315" cy="460" r="6" fill="#2c3e50" />
+                    <path id="mouth-1" d="M290,480 Q300,490 310,480" fill="none" stroke="#2c3e50" stroke-width="3" stroke-linecap="round" />
+                </svg>
+            </div>
+        </div>
+
+        <!-- Árvore Bebé (Inicialmente invisível) -->
+        <div id="wrapper-2" class="tree-wrapper" onclick="selectTree(2)" style="display:none">
+            <div class="tree-label">Bebé</div>
+            <div class="tree-container tree-baby" id="tree-2">
+                <svg viewBox="0 0 600 600">
+                    <path d="M280,560 C280,500 285,480 290,450 L310,450 C315,480 320,500 320,560 Z" fill="var(--trunk-main)" />
+                    <circle id="baby-leaves" cx="300" cy="400" r="60" fill="var(--leaf-color)" />
+                    <circle cx="293" cy="500" r="3" fill="#2c3e50" />
+                    <circle cx="307" cy="500" r="3" fill="#2c3e50" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <div class="landscape">
+        <div class="hill hill-bg"></div>
+        <div class="hill hill-fg"></div>
+    </div>
+
+    <div id="action-bar">
+        <button class="action-btn" onclick="act('water')">💧<span>Água</span></button>
+        <button class="action-btn" onclick="act('food')">🤎<span>Adubo</span></button>
+        <button class="action-btn" onclick="act('light')">☀️<span>Sol</span></button>
+        <button class="action-btn" onclick="act('mood')">❤️<span>Amor</span></button>
+        <button id="btn-plant" class="action-btn" onclick="plantBaby()">🌱<span>Plantar</span></button>
+        <button id="btn-play" class="action-btn" onclick="act('play')">🎮<span>Brincar</span></button>
+    </div>
+
+    <div id="minigame-overlay">
+        <h2 style="color: white; margin-bottom: 15px;">Apanha as Estrelas!</h2>
+        <div id="mg-canvas"></div>
+        <button class="action-btn" style="margin-top:20px; width:120px;" onclick="closeMiniGame()">Fechar</button>
+    </div>
+
+    <div id="start-modal" class="modal">
+        <div class="modal-content">
+            <h1>Família de Árvores</h1>
+            <p>Cuida da árvore principal. Ela sente-se sozinha, planta um bebé para lhe fazer companhia!</p>
+            <button class="action-btn" style="width:150px; margin-top:20px" onclick="startGame()">Jogar</button>
+        </div>
+    </div>
+
+    <script>
+        const trees = {
+            1: { water: 100, food: 100, light: 100, mood: 100, alive: true, active: true },
+            2: { water: 100, food: 100, light: 100, mood: 100, alive: true, active: false, growth: 0 }
+        };
+
+        let selectedId = 1;
+        let ticks = 0;
+        let season = 0;
+
+        const seasons = [
+            { name: "Primavera", icon: "🌸", sky: "#00aaff", grass: "#8bc34a", leaf: "#2e7d32" },
+            { name: "Verão", icon: "☀️", sky: "#00ccff", grass: "#aed581", leaf: "#1b5e20" },
+            { name: "Outono", icon: "🍂", sky: "#4fc3f7", grass: "#fbc02d", leaf: "#ef6c00" },
+            { name: "Inverno", icon: "❄️", sky: "#81d4fa", grass: "#cfd8dc", leaf: "#546e7a" }
+        ];
+
+        function startGame() {
+            document.getElementById('start-modal').style.display = 'none';
+            setInterval(tick, 2000);
+        }
+
+        function tick() {
+            ticks++;
+
+            // Mudar estação
+            if (ticks % 30 === 0) {
+                season = (season + 1) % 4;
+                updateVisuals();
+            }
+
+            // Lógica para cada árvore
+            for (let id in trees) {
+                let t = trees[id];
+                if (!t.active || !t.alive) continue;
+
+                // Desgaste natural
+                t.water -= 2;
+                t.food -= 1;
+                t.light -= 1.5;
+
+                // Solidão: Se a árvore 1 estiver sozinha, o humor desce rápido
+                if (id == 1 && !trees[2].active) {
+                    t.mood -= 3;
+                    document.getElementById('pill-status').innerText = "😟 Sozinha...";
+                } else {
+                    t.mood -= 1;
+                    document.getElementById('pill-status').innerText = "🌳 Família Feliz";
+                }
+
+                // Crescimento do bebé
+                if (id == 2 && t.growth < 100) {
+                    t.growth += 0.5;
+                    document.getElementById('baby-leaves').setAttribute('r', 60 + (t.growth * 0.4));
+                }
+
+                // Verificar Morte
+                if (t.water <= 0 || t.food <= 0 || t.light <= 0 || t.mood <= 0) {
+                    t.alive = false;
+                    gameOver(id);
+                }
+            }
+
+            // Eventos aleatórios
+            if (Math.random() < 0.1) spawnBird();
+            if (Math.random() < 0.08) spawnTrash();
+
+            updateHUD();
+        }
+
+        function selectTree(id) {
+            if (!trees[id].active) return;
+            selectedId = id;
+            document.querySelectorAll('.tree-wrapper').forEach(w => w.classList.remove('selected'));
+            document.getElementById(`wrapper-${id}`).classList.add('selected');
+            updateHUD();
+        }
+
+        function plantBaby() {
+            if (trees[2].active) return;
+            trees[2].active = true;
+            document.getElementById('wrapper-2').style.display = 'block';
+            document.getElementById('btn-plant').classList.add('disabled');
+            selectTree(2);
+        }
+
+        function act(type) {
+            let t = trees[selectedId];
+            if (!t.alive) return;
+
+            if (type === 'play') return startMiniGame();
+            
+            t[type] = Math.min(100, t[type] + 20);
+            updateHUD();
+            
+            // Pequeno feedback visual
+            const el = document.getElementById(`wrapper-${selectedId}`);
+            el.style.transform = "scale(1.1)";
+            setTimeout(() => el.style.transform = "", 200);
+        }
+
+        function updateHUD() {
+            let t = trees[selectedId];
+            ['water', 'food', 'light', 'mood'].forEach(k => {
+                document.getElementById(`fill-${k}`).style.width = Math.max(0, t[k]) + "%";
+            });
+        }
+
+        function updateVisuals() {
+            const s = seasons[season];
+            document.getElementById('pill-season').innerText = s.icon + " " + s.name;
+            document.body.style.setProperty('--sky-color', s.sky);
+            document.body.style.setProperty('--grass-color', s.grass);
+            document.body.style.setProperty('--leaf-color', s.leaf);
+        }
+
+        function spawnTrash() {
+            const t = document.getElementById('trash');
+            t.style.display = 'block';
+            t.style.left = (Math.random() * 80 + 10) + "%";
+        }
+
+        function cleanTrash() {
+            document.getElementById('trash').style.display = 'none';
+            if (trees[selectedId].active) {
+                trees[selectedId].food = Math.min(100, trees[selectedId].food + 15);
+                updateHUD();
+            }
+        }
+
+        function spawnBird() {
+            const b = document.getElementById('bird');
+            b.style.display = 'block';
+            b.style.left = (Math.random() * 60 + 20) + "%";
+            b.style.top = "20%";
+        }
+
+        function scareBird() {
+            const b = document.getElementById('bird');
+            b.style.display = 'none';
+            trees[selectedId].mood = Math.min(100, trees[selectedId].mood + 10);
+            updateHUD();
+        }
+
+        function gameOver(id) {
+            const name = id == 1 ? "Árvore Pai" : "Bebé";
+            alert(`A ${name} morreu! Precisas de cuidar de toda a família.`);
+            location.reload();
+        }
+
+        let mgInterval;
+        function startMiniGame() {
+            const ov = document.getElementById('minigame-overlay');
+            const cv = document.getElementById('mg-canvas');
+            ov.style.display = 'flex';
+            cv.innerHTML = '';
+            mgInterval = setInterval(() => {
+                const s = document.createElement('div');
+                s.className = 'mg-star';
+                s.innerText = '⭐';
+                s.style.left = Math.random() * 280 + 'px';
+                s.style.top = '-50px';
+                const capture = (e) => {
+                    e.stopPropagation();
+                    s.remove();
+                    trees[selectedId].mood = Math.min(100, trees[selectedId].mood + 5);
+                    updateHUD();
+                };
+                s.onmousedown = capture;
+                s.ontouchstart = capture;
+                cv.appendChild(s);
+                setTimeout(() => { if(s.parentNode) s.remove(); }, 2500);
+            }, 700);
+        }
+
+        function closeMiniGame() {
+            clearInterval(mgInterval);
+            document.getElementById('minigame-overlay').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
