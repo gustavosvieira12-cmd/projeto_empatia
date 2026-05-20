@@ -2,108 +2,336 @@
 <html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>O Meu Pou Árvore - Companhia</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>O Meu Pou Arvore - Companhia</title>
     <style>
         :root {
             --sky-color: #00aaff;
+            --sky-top: #0077cc;
             --grass-color: #8bc34a;
             --trunk-main: #d49a56;
             --leaf-color: #2e7d32;
+            --mountain-far: #5a7a5a;
+            --mountain-mid: #4a6a4a;
+            --mountain-near: #3a5a3a;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; touch-action: manipulation; }
 
         body {
-            background: linear-gradient(to bottom, var(--sky-color), #ffffff);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-color) 40%, #b3e5fc 70%, #e1f5fe 100%);
+            height: 100vh; height: 100dvh;
+            display: flex; flex-direction: column; align-items: center;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden;
-            position: fixed;
-            width: 100%;
+            overflow: hidden; position: fixed; width: 100%;
             transition: all 1.5s ease-in-out;
+            overscroll-behavior: none;
         }
 
-        /* --- CENÁRIO --- */
-        .landscape { position: absolute; bottom: 0; width: 100%; height: 35%; z-index: 1; pointer-events: none; }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        }
+
+        /* --- CENARIO --- */
+        .landscape { position: absolute; bottom: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+
+        .mountain { position: absolute; transition: background 1.5s; }
+        .mountain-far { bottom: 28%; width: 120%; height: 35%; left: -10%; background: var(--mountain-far); clip-path: polygon(0% 100%, 5% 50%, 15% 70%, 25% 30%, 35% 55%, 45% 20%, 55% 45%, 65% 25%, 75% 50%, 85% 35%, 95% 55%, 100% 100%); opacity: 0.55; z-index: 1; }
+        .mountain-mid { bottom: 22%; width: 115%; height: 28%; left: -8%; background: var(--mountain-mid); clip-path: polygon(0% 100%, 8% 55%, 18% 75%, 30% 40%, 42% 60%, 55% 30%, 68% 50%, 78% 35%, 88% 55%, 100% 100%); opacity: 0.6; z-index: 2; }
+        .mountain-near { bottom: 18%; width: 110%; height: 22%; left: -5%; background: var(--mountain-near); clip-path: polygon(0% 100%, 10% 60%, 25% 45%, 40% 65%, 55% 40%, 70% 55%, 85% 45%, 100% 100%); opacity: 0.65; z-index: 3; }
+
         .hill { position: absolute; bottom: 0; border-radius: 50% 50% 0 0; transition: background 1.5s; }
-        .hill-bg { width: 150%; height: 100%; left: -25%; background: #558b2f; z-index: 1; opacity: 0.6; }
-        .hill-fg { width: 130%; height: 75%; left: -15%; background: var(--grass-color); z-index: 2; }
+        .hill-bg { width: 150%; height: 30%; left: -25%; background: #558b2f; z-index: 4; opacity: 0.7; }
+        .hill-fg { width: 130%; height: 22%; left: -15%; background: var(--grass-color); z-index: 5; }
+
+        /* Chao de terra onde as arvores ficam */
+        .ground {
+            position: absolute; bottom: 0; width: 100%; z-index: 6;
+            height: clamp(50px, 12vh, 90px);
+            background: linear-gradient(to bottom, var(--grass-color) 0%, #6d4c41 30%, #5d4037 100%);
+            border-top: 3px solid #33691e;
+            transition: background 1.5s;
+        }
+        .ground::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 8px;
+            background: linear-gradient(to bottom, rgba(139,195,74,0.6), transparent);
+        }
+
+        /* Estrelas decorativas no ceu */
+        .sky-star {
+            position: absolute; z-index: 0; pointer-events: none;
+            width: 3px; height: 3px; background: white; border-radius: 50%;
+            opacity: 0; transition: opacity 1.5s;
+        }
+        body.night .sky-star { opacity: 0.8; animation: twinkle 2s ease-in-out infinite alternate; }
+        @keyframes twinkle { 0% { opacity: 0.3; transform: scale(1); } 100% { opacity: 1; transform: scale(1.5); } }
 
         #sun {
-            position: absolute; top: 40px; right: 10%;
-            width: 80px; height: 80px;
-            background: #ffeb3b;
+            position: absolute; top: 30px; right: 10%;
+            width: clamp(50px, 12vw, 90px); height: clamp(50px, 12vw, 90px);
+            background: radial-gradient(circle, #fff9c4 30%, #ffeb3b 70%, #fbc02d);
             border-radius: 50%; z-index: 0;
-            box-shadow: 0 0 40px #fff176;
+            box-shadow: 0 0 30px #fff176, 0 0 60px rgba(255,235,59,0.4);
+            animation: sunPulse 3s ease-in-out infinite;
+            transition: top 1.5s, opacity 1.5s;
+        }
+        @keyframes sunPulse { 0%,100% { box-shadow: 0 0 30px #fff176, 0 0 60px rgba(255,235,59,0.4); } 50% { box-shadow: 0 0 50px #fff176, 0 0 90px rgba(255,235,59,0.5); } }
+
+        /* Nuvens */
+        .cloud {
+            position: absolute; z-index: 0; pointer-events: none;
+            background: white; border-radius: 50px; opacity: 0.85;
+            animation: cloudDrift linear infinite;
+        }
+        .cloud::before, .cloud::after { content: ''; position: absolute; background: white; border-radius: 50%; }
+        .cloud::before { width: 60%; height: 120%; top: -50%; left: 15%; }
+        .cloud::after { width: 45%; height: 100%; top: -30%; right: 15%; }
+        @keyframes cloudDrift { from { transform: translateX(-200px); } to { transform: translateX(calc(100vw + 200px)); } }
+
+        /* Particulas sazonais */
+        .particle {
+            position: absolute; pointer-events: none; z-index: 10;
+            animation: particleFall linear forwards;
+        }
+        @keyframes particleFall {
+            0% { opacity: 1; transform: translateY(0) rotate(0deg) translateX(0); }
+            50% { opacity: 0.8; }
+            100% { opacity: 0; transform: translateY(100vh) rotate(720deg) translateX(50px); }
         }
 
         /* --- HUD --- */
-        #top-info { position: relative; z-index: 200; width: 95%; max-width: 500px; display: flex; justify-content: space-between; margin-top: 10px; }
-        .info-pill { background: rgba(255,255,255,0.9); padding: 8px 15px; border-radius: 20px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.1); font-size: 14px; }
+        #top-info { position: relative; z-index: 200; width: 95%; max-width: 500px; display: flex; justify-content: space-between; margin-top: 8px; gap: 8px; }
+        .info-pill { background: rgba(255,255,255,0.92); padding: 6px 12px; border-radius: 20px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.1); font-size: clamp(11px, 2.5vw, 14px); white-space: nowrap; backdrop-filter: blur(5px); }
 
         #hud {
             position: relative; z-index: 200; width: 95%; max-width: 500px;
-            margin-top: 10px; background: rgba(255, 255, 255, 0.9);
-            padding: 15px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+            margin-top: 8px; background: rgba(255,255,255,0.92);
+            padding: clamp(10px, 2vw, 15px); border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+            backdrop-filter: blur(5px);
         }
-        .stat-label { font-size: 12px; font-weight: bold; margin-bottom: 2px; display: block; }
-        .bar-bg { width: 100%; height: 12px; background: #ddd; border-radius: 6px; overflow: hidden; }
-        .bar-fill { height: 100%; width: 100%; transition: width 0.4s; }
+        .stat-label { font-size: clamp(10px, 2vw, 12px); font-weight: bold; margin-bottom: 2px; display: block; }
+        .bar-bg { width: 100%; height: 10px; background: #e0e0e0; border-radius: 6px; overflow: hidden; }
+        .bar-fill { height: 100%; width: 100%; transition: width 0.4s; border-radius: 6px; }
 
-        /* --- ÁRVORES --- */
+        /* Barra de progresso do bebe */
+        #baby-progress-wrap { display: none; grid-column: 1 / -1; margin-top: 2px; }
+        #baby-progress-wrap .stat-label { color: #4caf50; }
+        .baby-bar-bg { width: 100%; height: 8px; background: #e0e0e0; border-radius: 6px; overflow: hidden; }
+        .baby-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #a5d6a7, #4caf50); transition: width 0.5s; border-radius: 6px; }
+
+        /* --- ARVORES --- */
         #game-area {
             position: relative; z-index: 50; flex-grow: 1; width: 100%;
             display: flex; justify-content: center; align-items: flex-end;
-            gap: 20px; padding-bottom: 20px;
+            gap: clamp(10px, 4vw, 25px);
+            padding-bottom: clamp(55px, 14vh, 100px);
         }
 
-        .tree-wrapper { position: relative; cursor: pointer; transition: transform 0.3s; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.1)); }
-        .tree-wrapper.selected { transform: scale(1.05); filter: drop-shadow(0 0 15px rgba(255,255,255,0.8)); }
-        .tree-label { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background: white; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold; display: none; }
+        .tree-wrapper {
+            position: relative; cursor: pointer; transition: transform 0.3s, filter 0.3s;
+            filter: drop-shadow(0 5px 8px rgba(0,0,0,0.2));
+        }
+        .tree-wrapper.selected { transform: scale(1.05); filter: drop-shadow(0 0 20px rgba(255,255,255,0.9)); }
+        .tree-label {
+            position: absolute; top: -28px; left: 50%; transform: translateX(-50%);
+            background: white; padding: 2px 10px; border-radius: 12px;
+            font-size: clamp(9px, 2vw, 11px); font-weight: bold;
+            display: none; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            white-space: nowrap;
+        }
         .tree-wrapper.selected .tree-label { display: block; }
 
-        .tree-container { position: relative; width: 180px; height: 250px; transform-origin: bottom center; }
-        .tree-main { width: 240px; height: 320px; }
-        .tree-baby { width: 100px; height: 140px; }
+        .tree-container { position: relative; transform-origin: bottom center; }
+        .tree-main { width: clamp(130px, 38vw, 240px); height: clamp(200px, 50vh, 350px); }
+        .tree-baby { width: clamp(65px, 18vw, 110px); height: clamp(100px, 25vh, 160px); }
 
-        #bird { position: absolute; font-size: 50px; cursor: pointer; display: none; z-index: 150; }
-        #trash { position: absolute; bottom: 18%; font-size: 40px; cursor: pointer; display: none; z-index: 100; }
+        /* Animacoes das arvores */
+        @keyframes bounce { 0% { transform: scale(1); } 50% { transform: scale(1.12); } 100% { transform: scale(1); } }
+        .tree-wrapper.bounce { animation: bounce 0.35s ease; }
 
-        /* --- BOTÕES --- */
+        @keyframes blink { 0%,90%,100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+        .tree-eye { animation: blink 4s ease-in-out infinite; transform-origin: center; }
+        .tree-eye:nth-child(2) { animation-delay: 0.1s; }
+
+        /* Particulas de interacao */
+        .interact-particle {
+            position: absolute; pointer-events: none; z-index: 300;
+            font-size: 24px; animation: floatUp 1s ease-out forwards;
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-80px) scale(1.3); }
+        }
+
+        /* Evento narrativo */
+        #event-banner {
+            position: absolute; top: 10px; left: 50%; transform: translateX(-50%) translateY(-150%);
+            background: rgba(255,255,255,0.95); padding: 12px 18px; border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15); z-index: 500;
+            font-size: clamp(12px, 2.5vw, 14px); font-weight: 500;
+            max-width: 90%; text-align: center;
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            backdrop-filter: blur(8px);
+        }
+        #event-banner.show { transform: translateX(-50%) translateY(0); }
+        #event-banner .event-emoji { font-size: 20px; margin-right: 6px; }
+
+        #bird {
+            position: absolute; font-size: clamp(35px, 8vw, 50px); cursor: pointer;
+            z-index: 150; pointer-events: none;
+            opacity: 0; transform: translateY(0) translateX(0);
+            transition: opacity 0.6s ease, transform 0.8s ease;
+        }
+        #bird.visible { opacity: 1; pointer-events: auto; }
+        #bird.flying-away { opacity: 0; transform: translateY(-120px) translateX(80px); pointer-events: none; transition: opacity 0.8s ease, transform 1s ease; }
+        #bird:active { transform: scale(0.8); }
+
+        #trash {
+            position: absolute; bottom: 18%; font-size: clamp(28px, 7vw, 40px); cursor: pointer;
+            z-index: 100; pointer-events: none;
+            opacity: 0; transform: translateY(20px) rotate(-10deg);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        #trash.visible { opacity: 1; pointer-events: auto; transform: translateY(0) rotate(0deg); }
+        #trash:active { transform: scale(0.8); }
+
+        /* --- BOTOES --- */
         #action-bar {
-            position: relative; z-index: 300; width: 100%; padding: 15px;
-            background: white; display: flex; justify-content: space-around; 
+            position: relative; z-index: 300; width: 100%; padding: 10px 8px;
+            padding-bottom: max(10px, env(safe-area-inset-bottom));
+            background: rgba(255,255,255,0.95); display: grid;
+            grid-template-columns: repeat(3, 1fr); gap: 6px;
             border-top: 2px solid #eee;
+            backdrop-filter: blur(8px);
         }
         .action-btn {
-            background: #f8f9fa; border: 2px solid #eee; padding: 10px;
-            border-radius: 12px; cursor: pointer; display: flex; flex-direction: column; 
-            align-items: center; width: 75px; transition: 0.2s;
+            background: #f8f9fa; border: 2px solid #eee; padding: 8px 4px;
+            border-radius: 14px; cursor: pointer; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; min-height: 52px;
+            transition: 0.2s; font-family: inherit;
         }
-        .action-btn:active { transform: scale(0.9); }
-        .action-btn.disabled { opacity: 0.5; filter: grayscale(1); pointer-events: none; }
-        .action-btn span { font-size: 10px; margin-top: 5px; font-weight: bold; }
+        .action-btn:active { transform: scale(0.92); background: #e8f5e9; }
+        .action-btn.disabled { opacity: 0.4; filter: grayscale(1); pointer-events: none; }
+        .action-btn span { font-size: clamp(9px, 2vw, 11px); margin-top: 3px; font-weight: bold; }
+        .action-btn .btn-icon { font-size: clamp(18px, 5vw, 24px); }
 
+        /* --- MINIGAMES --- */
         #minigame-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 2000; display: none;
+            background: rgba(0,0,0,0.88); z-index: 2000; display: none;
             flex-direction: column; align-items: center; justify-content: center;
+            backdrop-filter: blur(4px);
         }
-        #mg-canvas { width: 90%; max-width: 350px; height: 450px; background: #001f3f; border-radius: 20px; position: relative; overflow: hidden; border: 4px solid #0074D9; }
-        .mg-star { position: absolute; font-size: 40px; cursor: pointer; padding: 10px; animation: fall 2.5s linear forwards; }
-        @keyframes fall { to { transform: translateY(500px); } }
+        #mg-title { color: white; margin-bottom: 12px; font-size: clamp(16px, 4vw, 22px); }
+        #mg-score { color: #ffeb3b; font-size: clamp(14px, 3vw, 18px); margin-bottom: 8px; }
 
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 30px; border-radius: 20px; text-align: center; max-width: 300px; }
+        /* Minigame: Estrelas */
+        #mg-canvas { width: 90%; max-width: 380px; height: clamp(300px, 55vh, 450px); background: linear-gradient(to bottom, #001030, #001f3f); border-radius: 20px; position: relative; overflow: hidden; border: 3px solid #0074D9; }
+        .mg-star { position: absolute; font-size: clamp(28px, 7vw, 40px); cursor: pointer; padding: 8px; user-select: none; -webkit-user-select: none; transition: none; }
+        .mg-rotten { filter: hue-rotate(120deg) brightness(0.7); }
+
+        /* Minigame: Memoria */
+        #mg-memory { display: none; width: 90%; max-width: 380px; }
+        #mg-difficulty { display: none; width: 90%; max-width: 350px; }
+        .diff-btn {
+            width: 100%; padding: 14px; margin-bottom: 10px;
+            background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 16px; color: white; cursor: pointer;
+            font-size: clamp(14px, 3vw, 16px); font-weight: bold;
+            transition: 0.2s; font-family: inherit;
+        }
+        .diff-btn:active { transform: scale(0.96); background: rgba(255,255,255,0.2); }
+        .diff-btn .diff-desc { font-size: 11px; font-weight: normal; opacity: 0.7; margin-top: 4px; }
+        .memory-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .memory-grid.easy { grid-template-columns: repeat(4, 1fr); }
+        .memory-grid.hard { grid-template-columns: repeat(5, 1fr); }
+        .memory-card {
+            aspect-ratio: 1; background: #3949ab; border-radius: 12px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: clamp(20px, 5vw, 32px); transition: transform 0.4s, background 0.3s;
+            transform-style: preserve-3d; position: relative;
+        }
+        .memory-card.flipped { background: white; transform: rotateY(180deg); }
+        .memory-card.matched { background: #c8e6c9; transform: rotateY(180deg); cursor: default; }
+        .memory-card .card-front, .memory-card .card-back { position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; backface-visibility: hidden; border-radius: 12px; }
+        .memory-card .card-front { transform: rotateY(180deg); }
+        .memory-card .card-back { font-size: clamp(16px, 4vw, 24px); color: white; }
+
+        /* Minigame: Musical */
+        #mg-music { display: none; width: 90%; max-width: 380px; }
+        .music-flowers { display: flex; justify-content: center; gap: clamp(6px, 2vw, 12px); flex-wrap: wrap; }
+        .music-flower {
+            width: clamp(40px, 10vw, 60px); height: clamp(40px, 10vw, 60px);
+            border-radius: 50%; cursor: pointer; border: 3px solid rgba(255,255,255,0.3);
+            display: flex; align-items: center; justify-content: center;
+            font-size: clamp(18px, 4vw, 28px); transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .music-flower:active { transform: scale(0.9); }
+        .music-flower.glow { box-shadow: 0 0 20px currentColor, 0 0 40px currentColor; transform: scale(1.15); }
+
+        /* Menu de minigames */
+        #mg-menu { display: none; width: 90%; max-width: 350px; }
+        .mg-menu-btn {
+            width: 100%; padding: 14px; margin-bottom: 10px;
+            background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 16px; color: white; cursor: pointer;
+            font-size: clamp(14px, 3vw, 16px); font-weight: bold;
+            transition: 0.2s; font-family: inherit;
+        }
+        .mg-menu-btn:active { transform: scale(0.96); background: rgba(255,255,255,0.2); }
+
+        /* Modais */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.82); z-index: 1000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        .modal-content { background: white; padding: clamp(20px, 5vw, 35px); border-radius: 24px; text-align: center; max-width: 340px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .modal-content h1 { font-size: clamp(18px, 5vw, 24px); margin-bottom: 10px; color: #2e7d32; }
+        .modal-content p { font-size: clamp(13px, 3vw, 15px); color: #555; line-height: 1.5; margin-bottom: 15px; }
+        .modal-btn {
+            background: linear-gradient(135deg, #66bb6a, #43a047); color: white;
+            border: none; padding: 12px 28px; border-radius: 14px;
+            font-size: clamp(14px, 3vw, 16px); font-weight: bold;
+            cursor: pointer; transition: 0.2s; font-family: inherit;
+            box-shadow: 0 4px 15px rgba(76,175,80,0.3);
+        }
+        .modal-btn:active { transform: scale(0.95); }
+        .modal-btn.secondary { background: #f5f5f5; color: #333; box-shadow: none; }
+
+        /* Game Over Modal */
+        #gameover-modal { display: none; }
+        #gameover-modal .modal-content { border-top: 5px solid #e91e63; }
+        #gameover-modal h1 { color: #c62828; }
+
+        /* Story pages */
+        .story-page { display: none; }
+        .story-page.active { display: block; }
+        .story-dots { display: flex; justify-content: center; gap: 8px; margin: 12px 0; }
+        .story-dot { width: 8px; height: 8px; border-radius: 50%; background: #ddd; transition: 0.3s; }
+        .story-dot.active { background: #4caf50; width: 20px; border-radius: 4px; }
+
+        /* Mute button */
+        #btn-mute {
+            position: absolute; top: 8px; left: 8px; z-index: 300;
+            background: rgba(255,255,255,0.85); border: none; border-radius: 50%;
+            width: 36px; height: 36px; font-size: 16px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        /* Timer no minigame */
+        #mg-timer { color: #ff8a65; font-size: clamp(13px, 3vw, 16px); margin-bottom: 5px; }
+
+        /* Share button visual */
+        .share-arrow {
+            position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%);
+            font-size: 10px; opacity: 0; transition: opacity 0.3s;
+        }
+        .tree-wrapper:hover .share-arrow, .tree-wrapper.selected .share-arrow { opacity: 0.6; }
     </style>
 </head>
 <body>
 
+    <button id="btn-mute" onclick="toggleMute()" aria-label="Alternar som">🔊</button>
     <div id="sun"></div>
 
     <div id="top-info">
@@ -112,19 +340,25 @@
     </div>
 
     <div id="hud">
-        <div><span class="stat-label">💧 Água</span><div class="bar-bg"><div id="fill-water" class="bar-fill" style="background:#2196f3"></div></div></div>
-        <div><span class="stat-label">🤎 Solo</span><div class="bar-bg"><div id="fill-food" class="bar-fill" style="background:#795548"></div></div></div>
-        <div><span class="stat-label">☀️ Sol</span><div class="bar-bg"><div id="fill-light" class="bar-fill" style="background:#ffeb3b"></div></div></div>
-        <div><span class="stat-label">❤️ Humor</span><div class="bar-bg"><div id="fill-mood" class="bar-fill" style="background:#e91e63"></div></div></div>
+        <div><span class="stat-label">💧 Água</span><div class="bar-bg"><div id="fill-water" class="bar-fill" style="background:linear-gradient(90deg,#42a5f5,#2196f3)"></div></div></div>
+        <div><span class="stat-label">🤎 Solo</span><div class="bar-bg"><div id="fill-food" class="bar-fill" style="background:linear-gradient(90deg,#a1887f,#795548)"></div></div></div>
+        <div><span class="stat-label">☀️ Sol</span><div class="bar-bg"><div id="fill-light" class="bar-fill" style="background:linear-gradient(90deg,#fff176,#ffeb3b)"></div></div></div>
+        <div><span class="stat-label">❤️ Humor</span><div class="bar-bg"><div id="fill-mood" class="bar-fill" style="background:linear-gradient(90deg,#f48fb1,#e91e63)"></div></div></div>
+        <div id="baby-progress-wrap">
+            <span class="stat-label">🌱 Crescimento do Bebé</span>
+            <div class="baby-bar-bg"><div id="baby-progress" class="baby-bar-fill"></div></div>
+        </div>
     </div>
 
     <div id="game-area">
         <div id="trash" onclick="cleanTrash()">🥤</div>
         <div id="bird" onclick="scareBird()">🐦</div>
 
-        <!-- Árvore Principal -->
+        <div id="event-banner"><span class="event-emoji"></span><span class="event-text"></span></div>
+
+        <!-- Arvore Principal -->
         <div id="wrapper-1" class="tree-wrapper selected" onclick="selectTree(1)">
-            <div class="tree-label">Árvore Pai</div>
+            <div class="tree-label">🌳 Árvore Pai</div>
             <div class="tree-container tree-main" id="tree-1">
                 <div id="fruits-layer-1"></div>
                 <svg viewBox="0 0 600 600">
@@ -132,234 +366,942 @@
                     <circle cx="200" cy="250" r="95" fill="var(--leaf-color)" opacity="0.9" />
                     <circle cx="400" cy="250" r="95" fill="var(--leaf-color)" opacity="0.9" />
                     <circle cx="300" cy="150" r="115" fill="var(--leaf-color)" />
-                    <circle cx="285" cy="460" r="6" fill="#2c3e50" />
-                    <circle cx="315" cy="460" r="6" fill="#2c3e50" />
+                    <circle class="tree-eye" cx="285" cy="460" r="6" fill="#2c3e50" />
+                    <circle class="tree-eye" cx="315" cy="460" r="6" fill="#2c3e50" />
+                    <!-- Brilho nos olhos -->
+                    <circle cx="287" cy="458" r="2" fill="white" opacity="0.8" class="eye-sparkle" />
+                    <circle cx="317" cy="458" r="2" fill="white" opacity="0.8" class="eye-sparkle" />
                     <path id="mouth-1" d="M290,480 Q300,490 310,480" fill="none" stroke="#2c3e50" stroke-width="3" stroke-linecap="round" />
                 </svg>
             </div>
         </div>
 
-        <!-- Árvore Bebé (Inicialmente invisível) -->
+        <!-- Arvore Bebe -->
         <div id="wrapper-2" class="tree-wrapper" onclick="selectTree(2)" style="display:none">
-            <div class="tree-label">Bebé</div>
+            <div class="tree-label">🌱 Bebé</div>
             <div class="tree-container tree-baby" id="tree-2">
                 <svg viewBox="0 0 600 600">
                     <path d="M280,560 C280,500 285,480 290,450 L310,450 C315,480 320,500 320,560 Z" fill="var(--trunk-main)" />
                     <circle id="baby-leaves" cx="300" cy="400" r="60" fill="var(--leaf-color)" />
-                    <circle cx="293" cy="500" r="3" fill="#2c3e50" />
-                    <circle cx="307" cy="500" r="3" fill="#2c3e50" />
+                    <circle class="tree-eye" cx="293" cy="500" r="3" fill="#2c3e50" />
+                    <circle class="tree-eye" cx="307" cy="500" r="3" fill="#2c3e50" />
+                    <path id="mouth-2" d="M295,510 Q300,515 305,510" fill="none" stroke="#2c3e50" stroke-width="2" stroke-linecap="round" />
                 </svg>
             </div>
         </div>
     </div>
 
     <div class="landscape">
+        <div class="mountain mountain-far" id="mt-far"></div>
+        <div class="mountain mountain-mid" id="mt-mid"></div>
+        <div class="mountain mountain-near" id="mt-near"></div>
         <div class="hill hill-bg"></div>
         <div class="hill hill-fg"></div>
+        <div class="ground"></div>
     </div>
 
     <div id="action-bar">
-        <button class="action-btn" onclick="act('water')">💧<span>Água</span></button>
-        <button class="action-btn" onclick="act('food')">🤎<span>Adubo</span></button>
-        <button class="action-btn" onclick="act('light')">☀️<span>Sol</span></button>
-        <button class="action-btn" onclick="act('mood')">❤️<span>Amor</span></button>
-        <button id="btn-plant" class="action-btn" onclick="plantBaby()">🌱<span>Plantar</span></button>
-        <button id="btn-play" class="action-btn" onclick="act('play')">🎮<span>Brincar</span></button>
+        <button class="action-btn" onclick="act('water')" aria-label="Regar"><span class="btn-icon">💧</span><span>Água</span></button>
+        <button class="action-btn" onclick="act('food')" aria-label="Adubar"><span class="btn-icon">🤎</span><span>Adubo</span></button>
+        <button class="action-btn" onclick="act('light')" aria-label="Dar luz"><span class="btn-icon">☀️</span><span>Sol</span></button>
+        <button class="action-btn" onclick="act('mood')" aria-label="Dar amor"><span class="btn-icon">❤️</span><span>Amor</span></button>
+        <button id="btn-plant" class="action-btn" onclick="plantBaby()" aria-label="Plantar bebe"><span class="btn-icon">🌱</span><span>Plantar</span></button>
+        <button id="btn-play" class="action-btn" onclick="openMiniGameMenu()" aria-label="Brincar"><span class="btn-icon">🎮</span><span>Brincar</span></button>
     </div>
 
+    <!-- Overlay do Minigame -->
     <div id="minigame-overlay">
-        <h2 style="color: white; margin-bottom: 15px;">Apanha as Estrelas!</h2>
+        <h2 id="mg-title">Jogos!</h2>
+        <div id="mg-score"></div>
+        <div id="mg-timer"></div>
+
+        <!-- Menu de selecao -->
+        <div id="mg-menu">
+            <button class="mg-menu-btn" onclick="startStarGame()">⭐ Apanha as Estrelas</button>
+            <button class="mg-menu-btn" onclick="startMemoryGame()">🧠 Memória das Emoções</button>
+            <button class="mg-menu-btn" onclick="startMusicGame()">🎵 Jardim Musical</button>
+        </div>
+
+        <!-- Canvas Estrelas -->
         <div id="mg-canvas"></div>
-        <button class="action-btn" style="margin-top:20px; width:120px;" onclick="closeMiniGame()">Fechar</button>
+
+        <!-- Dificuldade da Memoria -->
+        <div id="mg-difficulty">
+            <button class="diff-btn" onclick="startMemoryWithDifficulty('easy')">
+                🟢 Fácil
+                <div class="diff-desc">12 cartas (6 pares) - Sem limite de tempo</div>
+            </button>
+            <button class="diff-btn" onclick="startMemoryWithDifficulty('medium')">
+                🟡 Médio
+                <div class="diff-desc">16 cartas (8 pares) - 60 segundos</div>
+            </button>
+            <button class="diff-btn" onclick="startMemoryWithDifficulty('hard')">
+                🔴 Difícil
+                <div class="diff-desc">20 cartas (10 pares) - 45 segundos</div>
+            </button>
+        </div>
+
+        <!-- Tabuleiro Memoria -->
+        <div id="mg-memory"><div class="memory-grid" id="memory-grid"></div></div>
+
+        <!-- Jardim Musical -->
+        <div id="mg-music">
+            <div class="music-flowers" id="music-flowers"></div>
+            <p id="music-instructions" style="color:rgba(255,255,255,0.7); margin-top:12px; font-size:13px;"></p>
+        </div>
+
+        <button class="action-btn" style="margin-top:15px; width:100px;" onclick="closeMiniGame()">Fechar</button>
     </div>
 
+    <!-- Modal de Inicio com Historia -->
     <div id="start-modal" class="modal">
         <div class="modal-content">
-            <h1>Família de Árvores</h1>
-            <p>Cuida da árvore principal. Ela sente-se sozinha, planta um bebé para lhe fazer companhia!</p>
-            <button class="action-btn" style="width:150px; margin-top:20px" onclick="startGame()">Jogar</button>
+            <div class="story-page active" id="story-1">
+                <h1>🌳 Família de Árvores</h1>
+                <p>Era uma vez, numa floresta encantada, uma árvore que vivia sozinha. Ela sonhava ter alguém para cuidar...</p>
+            </div>
+            <div class="story-page" id="story-2">
+                <h1>💚 Empatia</h1>
+                <p>A árvore precisava de alguém que se importasse. Alguém que a regasse, alimentasse e desse amor nos dias difíceis.</p>
+            </div>
+            <div class="story-page" id="story-3">
+                <h1>🌱 O Teu Papel</h1>
+                <p>O teu papel é cuidar com amor e empatia. Planta um bebé para fazer companhia e descobre que juntos são mais fortes!</p>
+            </div>
+            <div class="story-dots">
+                <div class="story-dot active" id="dot-1"></div>
+                <div class="story-dot" id="dot-2"></div>
+                <div class="story-dot" id="dot-3"></div>
+            </div>
+            <button class="modal-btn" id="story-btn" onclick="nextStory()">Continuar</button>
+        </div>
+    </div>
+
+    <!-- Modal Game Over -->
+    <div id="gameover-modal" class="modal">
+        <div class="modal-content">
+            <h1>💔 A Árvore Adoecceu...</h1>
+            <p id="gameover-msg">Às vezes precisamos de ajuda para continuar. Não desistas — pedir ajuda é um ato de coragem e empatia.</p>
+            <button class="modal-btn" onclick="restartGame()" style="margin-top:10px;">Tentar Novamente</button>
         </div>
     </div>
 
     <script>
-        const trees = {
-            1: { water: 100, food: 100, light: 100, mood: 100, alive: true, active: true },
-            2: { water: 100, food: 100, light: 100, mood: 100, alive: true, active: false, growth: 0 }
+        /* ===== ESTADO DO JOGO ===== */
+        const defaultState = {
+            trees: {
+                1: { water: 100, food: 100, light: 100, mood: 100, alive: true, active: true },
+                2: { water: 100, food: 100, light: 100, mood: 100, alive: true, active: false, growth: 0 }
+            },
+            selectedId: 1, ticks: 0, season: 0, achievements: [], babyPlanted: false, muted: false
         };
 
-        let selectedId = 1;
-        let ticks = 0;
-        let season = 0;
+        let trees, selectedId, ticks, season, achievements, babyPlanted, muted;
+        let trashCount = 0, birdCount = 0;
+        let gameInterval, particleInterval, mgInterval, mgTimerInterval;
+        let storyPage = 1;
+        let audioCtx = null;
 
+        function initDefaults() {
+            trees = JSON.parse(JSON.stringify(defaultState.trees));
+            selectedId = 1; ticks = 0; season = 0;
+            achievements = []; babyPlanted = false; muted = false;
+        }
+
+        /* ===== ESTACOES ===== */
         const seasons = [
-            { name: "Primavera", icon: "🌸", sky: "#00aaff", grass: "#8bc34a", leaf: "#2e7d32" },
-            { name: "Verão", icon: "☀️", sky: "#00ccff", grass: "#aed581", leaf: "#1b5e20" },
-            { name: "Outono", icon: "🍂", sky: "#4fc3f7", grass: "#fbc02d", leaf: "#ef6c00" },
-            { name: "Inverno", icon: "❄️", sky: "#81d4fa", grass: "#cfd8dc", leaf: "#546e7a" }
+            { name: "Primavera", icon: "🌸", sky: "#00aaff", skyTop: "#0077cc", grass: "#8bc34a", leaf: "#2e7d32", mtFar: "#5a7a5a", mtMid: "#4a6a4a", mtNear: "#3a5a3a" },
+            { name: "Verão", icon: "☀️", sky: "#00ccff", skyTop: "#0099dd", grass: "#aed581", leaf: "#1b5e20", mtFar: "#4a7a4a", mtMid: "#3a6a3a", mtNear: "#2a5a2a" },
+            { name: "Outono", icon: "🍂", sky: "#4fc3f7", skyTop: "#039be5", grass: "#fbc02d", leaf: "#ef6c00", mtFar: "#8a7a5a", mtMid: "#7a6a4a", mtNear: "#6a5a3a" },
+            { name: "Inverno", icon: "❄️", sky: "#b3e5fc", skyTop: "#81d4fa", grass: "#cfd8dc", leaf: "#546e7a", mtFar: "#7a8a8a", mtMid: "#6a7a7a", mtNear: "#5a6a6a" }
         ];
+
+        /* ===== AUDIO ===== */
+        function getAudioCtx() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            return audioCtx;
+        }
+
+        function playTone(freq, duration, type='sine', vol=0.15) {
+            if (muted) return;
+            try {
+                const ctx = getAudioCtx();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                gain.gain.setValueAtTime(vol, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + duration);
+            } catch(e) {}
+        }
+
+        function playSound(type) {
+            switch(type) {
+                case 'water': playTone(800, 0.15); setTimeout(() => playTone(600, 0.15), 80); break;
+                case 'food': playTone(300, 0.2, 'triangle'); break;
+                case 'light': playTone(1000, 0.1); setTimeout(() => playTone(1200, 0.1), 60); break;
+                case 'mood': playTone(523, 0.15); setTimeout(() => playTone(659, 0.15), 100); setTimeout(() => playTone(784, 0.2), 200); break;
+                case 'plant': playTone(262, 0.2, 'triangle'); setTimeout(() => playTone(330, 0.2, 'triangle'), 150); setTimeout(() => playTone(392, 0.3, 'triangle'), 300); break;
+                case 'click': playTone(600, 0.08, 'sine', 0.08); break;
+                case 'star': playTone(1200, 0.1, 'sine', 0.1); break;
+                case 'match': playTone(523, 0.1); setTimeout(() => playTone(784, 0.15), 80); break;
+                case 'wrong': playTone(200, 0.3, 'sawtooth', 0.08); break;
+                case 'season': playTone(440, 0.3, 'triangle', 0.06); break;
+                case 'bird': playTone(900, 0.1); setTimeout(() => playTone(1100, 0.1), 80); break;
+                case 'trash': playTone(250, 0.15, 'triangle'); break;
+            }
+        }
+
+        function toggleMute() {
+            muted = !muted;
+            document.getElementById('btn-mute').textContent = muted ? '🔇' : '🔊';
+        }
+
+        /* ===== STORY / START ===== */
+        function nextStory() {
+            playSound('click');
+            if (storyPage < 3) {
+                document.getElementById(`story-${storyPage}`).classList.remove('active');
+                document.getElementById(`dot-${storyPage}`).classList.remove('active');
+                storyPage++;
+                document.getElementById(`story-${storyPage}`).classList.add('active');
+                document.getElementById(`dot-${storyPage}`).classList.add('active');
+                if (storyPage === 3) document.getElementById('story-btn').textContent = 'Jogar!';
+            } else {
+                startGame();
+            }
+        }
 
         function startGame() {
             document.getElementById('start-modal').style.display = 'none';
-            setInterval(tick, 2000);
+            initDefaults();
+            document.getElementById('btn-mute').textContent = muted ? '🔇' : '🔊';
+            updateVisuals();
+            updateHUD();
+            selectTree(selectedId);
+            spawnClouds();
+            gameInterval = setInterval(tick, 2000);
+            particleInterval = setInterval(spawnSeasonParticle, 1500);
         }
 
+        /* ===== GAME LOOP ===== */
         function tick() {
             ticks++;
 
-            // Mudar estação
             if (ticks % 30 === 0) {
                 season = (season + 1) % 4;
                 updateVisuals();
+                playSound('season');
+                showEvent(seasons[season].icon, `Estação: ${seasons[season].name}!`);
             }
 
-            // Lógica para cada árvore
             for (let id in trees) {
                 let t = trees[id];
                 if (!t.active || !t.alive) continue;
 
-                // Desgaste natural
                 t.water -= 2;
                 t.food -= 1;
                 t.light -= 1.5;
 
-                // Solidão: Se a árvore 1 estiver sozinha, o humor desce rápido
                 if (id == 1 && !trees[2].active) {
                     t.mood -= 3;
-                    document.getElementById('pill-status').innerText = "😟 Sozinha...";
+                    document.getElementById('pill-status').textContent = "😟 Sozinha...";
                 } else {
                     t.mood -= 1;
-                    document.getElementById('pill-status').innerText = "🌳 Família Feliz";
+                    document.getElementById('pill-status').textContent = "🌳 Família Feliz";
                 }
 
-                // Crescimento do bebé
                 if (id == 2 && t.growth < 100) {
                     t.growth += 0.5;
                     document.getElementById('baby-leaves').setAttribute('r', 60 + (t.growth * 0.4));
+                    document.getElementById('baby-progress').style.width = t.growth + '%';
                 }
 
-                // Verificar Morte
                 if (t.water <= 0 || t.food <= 0 || t.light <= 0 || t.mood <= 0) {
                     t.alive = false;
                     gameOver(id);
+                    return;
                 }
             }
 
-            // Eventos aleatórios
             if (Math.random() < 0.1) spawnBird();
             if (Math.random() < 0.08) spawnTrash();
 
+            // Eventos narrativos aleatorios
+            if (ticks % 45 === 0 && Math.random() < 0.4) triggerNarrativeEvent();
+
             updateHUD();
+            updateExpressions();
         }
 
+        /* ===== SELECAO ===== */
         function selectTree(id) {
             if (!trees[id].active) return;
             selectedId = id;
             document.querySelectorAll('.tree-wrapper').forEach(w => w.classList.remove('selected'));
             document.getElementById(`wrapper-${id}`).classList.add('selected');
             updateHUD();
+            playSound('click');
         }
 
+        /* ===== ACOES ===== */
         function plantBaby() {
             if (trees[2].active) return;
             trees[2].active = true;
+            babyPlanted = true;
             document.getElementById('wrapper-2').style.display = 'block';
             document.getElementById('btn-plant').classList.add('disabled');
+            document.getElementById('baby-progress-wrap').style.display = 'block';
             selectTree(2);
+            playSound('plant');
+            showEvent('🌱', 'Plantaste um bebé! A árvore pai está feliz por ter companhia!');
+            unlockAchievement('Familia Unida', '🌳');
+
+            // Animacao de entrada do bebe
+            const w2 = document.getElementById('wrapper-2');
+            w2.style.transform = 'scale(0)';
+            w2.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            setTimeout(() => w2.style.transform = '', 50);
         }
 
         function act(type) {
             let t = trees[selectedId];
             if (!t.alive) return;
 
-            if (type === 'play') return startMiniGame();
-            
+            if (type === 'play') return openMiniGameMenu();
+
             t[type] = Math.min(100, t[type] + 20);
             updateHUD();
-            
-            // Pequeno feedback visual
+            updateExpressions();
+
+            // Feedback visual
             const el = document.getElementById(`wrapper-${selectedId}`);
-            el.style.transform = "scale(1.1)";
-            setTimeout(() => el.style.transform = "", 200);
+            el.classList.remove('bounce');
+            void el.offsetWidth;
+            el.classList.add('bounce');
+            setTimeout(() => el.classList.remove('bounce'), 350);
+
+            // Particulas
+            const rect = el.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height * 0.3;
+            const particles = { water: '💧', food: '🍂', light: '✨', mood: '❤️' };
+            spawnInteractParticles(particles[type] || '✨', cx, cy, 4);
+
+            // Som
+            playSound(type);
+
+            // Conquista
+            if (!achievements.includes('Primeiro Cuidado')) {
+                unlockAchievement('Primeiro Cuidado', '💚');
+            }
         }
 
+        /* ===== HUD ===== */
         function updateHUD() {
             let t = trees[selectedId];
             ['water', 'food', 'light', 'mood'].forEach(k => {
-                document.getElementById(`fill-${k}`).style.width = Math.max(0, t[k]) + "%";
+                const val = Math.max(0, t[k]);
+                document.getElementById(`fill-${k}`).style.width = val + "%";
+                // Alerta visual quando baixo
+                const fill = document.getElementById(`fill-${k}`);
+                if (val < 20) {
+                    fill.style.animation = 'none';
+                    fill.style.opacity = '0.6';
+                } else {
+                    fill.style.opacity = '1';
+                }
             });
         }
 
         function updateVisuals() {
             const s = seasons[season];
-            document.getElementById('pill-season').innerText = s.icon + " " + s.name;
+            document.getElementById('pill-season').textContent = s.icon + " " + s.name;
             document.body.style.setProperty('--sky-color', s.sky);
+            document.body.style.setProperty('--sky-top', s.skyTop);
             document.body.style.setProperty('--grass-color', s.grass);
             document.body.style.setProperty('--leaf-color', s.leaf);
+            document.body.style.setProperty('--mountain-far', s.mtFar);
+            document.body.style.setProperty('--mountain-mid', s.mtMid);
+            document.body.style.setProperty('--mountain-near', s.mtNear);
+
+            // Sol muda posicao por estacao
+            const sun = document.getElementById('sun');
+            if (season === 1) sun.style.top = '15px'; // Verao: mais alto
+            else if (season === 3) sun.style.top = '50px'; // Inverno: mais baixo
+            else sun.style.top = '30px';
         }
 
+        /* ===== EXPRESSOES ===== */
+        function updateExpressions() {
+            for (let id = 1; id <= 2; id++) {
+                const t = trees[id];
+                if (!t.active || !t.alive) continue;
+                const mouth = document.getElementById(`mouth-${id}`);
+                if (!mouth) continue;
+
+                const avg = (t.water + t.food + t.light + t.mood) / 4;
+                const anyCritical = t.water < 20 || t.food < 20 || t.light < 20 || t.mood < 20;
+
+                if (anyCritical) {
+                    // Triste/angustiado
+                    if (id === 1) mouth.setAttribute('d', 'M290,490 Q300,478 310,490');
+                    else mouth.setAttribute('d', 'M295,515 Q300,508 305,515');
+                } else if (avg >= 70) {
+                    // Feliz
+                    if (id === 1) mouth.setAttribute('d', 'M290,480 Q300,495 310,480');
+                    else mouth.setAttribute('d', 'M295,510 Q300,518 305,510');
+                } else {
+                    // Neutro
+                    if (id === 1) mouth.setAttribute('d', 'M290,485 L310,485');
+                    else mouth.setAttribute('d', 'M295,512 L305,512');
+                }
+            }
+        }
+
+        /* ===== EVENTOS ===== */
         function spawnTrash() {
             const t = document.getElementById('trash');
-            t.style.display = 'block';
-            t.style.left = (Math.random() * 80 + 10) + "%";
+            t.classList.remove('visible');
+            t.style.left = (Math.random() * 75 + 10) + "%";
+            // Forcar reflow antes de adicionar a classe para a transicao funcionar
+            void t.offsetWidth;
+            t.classList.add('visible');
         }
 
         function cleanTrash() {
-            document.getElementById('trash').style.display = 'none';
-            if (trees[selectedId].active) {
+            document.getElementById('trash').classList.remove('visible');
+            if (trees[selectedId].active && trees[selectedId].alive) {
                 trees[selectedId].food = Math.min(100, trees[selectedId].food + 15);
                 updateHUD();
+                playSound('trash');
+                const rect = document.getElementById(`wrapper-${selectedId}`).getBoundingClientRect();
+                spawnInteractParticles('🍂', rect.left + rect.width/2, rect.top + rect.height/2, 3);
+
+                trashCount++;
+                if (trashCount >= 10) unlockAchievement('Guardiao da Natureza', '🌿');
             }
         }
 
         function spawnBird() {
             const b = document.getElementById('bird');
-            b.style.display = 'block';
-            b.style.left = (Math.random() * 60 + 20) + "%";
-            b.style.top = "20%";
+            b.classList.remove('visible', 'flying-away');
+            b.style.left = (Math.random() * 55 + 20) + "%";
+            b.style.top = (15 + Math.random() * 15) + "%";
+            b.style.transform = 'translateY(0) translateX(0)';
+            void b.offsetWidth;
+            b.classList.add('visible');
         }
 
         function scareBird() {
             const b = document.getElementById('bird');
-            b.style.display = 'none';
+            b.classList.remove('visible');
+            b.classList.add('flying-away');
+            setTimeout(() => {
+                b.classList.remove('flying-away');
+                b.style.transform = 'translateY(0) translateX(0)';
+            }, 1000);
             trees[selectedId].mood = Math.min(100, trees[selectedId].mood + 10);
+            updateHUD();
+            playSound('bird');
+            const rect = document.getElementById(`wrapper-${selectedId}`).getBoundingClientRect();
+            spawnInteractParticles('❤️', rect.left + rect.width/2, rect.top, 3);
+
+            birdCount++;
+            if (birdCount >= 5) unlockAchievement('Amigo dos Animais', '🐦');
+        }
+
+        function showEvent(emoji, text) {
+            const banner = document.getElementById('event-banner');
+            banner.querySelector('.event-emoji').textContent = emoji;
+            banner.querySelector('.event-text').textContent = text;
+            banner.classList.add('show');
+            setTimeout(() => banner.classList.remove('show'), 3500);
+        }
+
+        function triggerNarrativeEvent() {
+            const events = [
+                { emoji: '🦋', msg: 'Uma borboleta pousou na árvore! Humor +10', action: () => { trees[selectedId].mood = Math.min(100, trees[selectedId].mood + 10); }},
+                { emoji: '🌈', msg: 'Um arco-íris apareceu! Tudo +5', action: () => { for (let k of ['water','food','light','mood']) trees[selectedId][k] = Math.min(100, trees[selectedId][k] + 5); }},
+                { emoji: '🎵', msg: 'Os pássaros estão a cantar! Humor +8', action: () => { trees[selectedId].mood = Math.min(100, trees[selectedId].mood + 8); }},
+                { emoji: '🌻', msg: 'Uma flor desabrochou perto da árvore! Solo +10', action: () => { trees[selectedId].food = Math.min(100, trees[selectedId].food + 10); }},
+                { emoji: '💧', msg: 'Choveu um pouco! Água +12', action: () => { trees[selectedId].water = Math.min(100, trees[selectedId].water + 12); }},
+            ];
+            const ev = events[Math.floor(Math.random() * events.length)];
+            ev.action();
+            showEvent(ev.emoji, ev.msg);
             updateHUD();
         }
 
+        /* ===== PARTICULAS ===== */
+        function spawnInteractParticles(emoji, x, y, count) {
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    const p = document.createElement('div');
+                    p.className = 'interact-particle';
+                    p.textContent = emoji;
+                    p.style.left = (x + (Math.random() - 0.5) * 60) + 'px';
+                    p.style.top = (y + (Math.random() - 0.5) * 30) + 'px';
+                    document.body.appendChild(p);
+                    setTimeout(() => p.remove(), 1000);
+                }, i * 80);
+            }
+        }
+
+        function spawnSeasonParticle() {
+            if (season === 2) { // Outono - folhas
+                spawnFallingParticle('🍂', 20);
+            } else if (season === 3) { // Inverno - neve
+                spawnFallingParticle('❄', 15);
+            } else if (season === 0 || season === 1) { // Primavera/Verao - borboletas raramente
+                if (Math.random() < 0.3) spawnFallingParticle('🦋', 12);
+            }
+        }
+
+        function spawnFallingParticle(emoji, size) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.textContent = emoji;
+            p.style.fontSize = size + 'px';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.top = '-30px';
+            p.style.animationDuration = (4 + Math.random() * 4) + 's';
+            document.body.appendChild(p);
+            setTimeout(() => p.remove(), 8000);
+        }
+
+        function spawnClouds() {
+            const sizes = [
+                { w: 80, h: 25, top: '8%', dur: 35 },
+                { w: 100, h: 30, top: '14%', dur: 45 },
+                { w: 60, h: 18, top: '5%', dur: 55 },
+                { w: 120, h: 35, top: '18%', dur: 40 },
+                { w: 70, h: 22, top: '11%', dur: 50 },
+            ];
+            sizes.forEach((s, i) => {
+                const c = document.createElement('div');
+                c.className = 'cloud';
+                c.style.width = s.w + 'px';
+                c.style.height = s.h + 'px';
+                c.style.top = s.top;
+                c.style.animationDuration = s.dur + 's';
+                c.style.animationDelay = (-i * 8) + 's';
+                c.style.opacity = 0.6 + Math.random() * 0.3;
+                document.body.appendChild(c);
+            });
+
+            // Estrelas decorativas no ceu (visiveis a noite)
+            for (let i = 0; i < 30; i++) {
+                const star = document.createElement('div');
+                star.className = 'sky-star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 50 + '%';
+                star.style.width = (1 + Math.random() * 3) + 'px';
+                star.style.height = star.style.width;
+                star.style.animationDelay = (Math.random() * 3) + 's';
+                document.body.appendChild(star);
+            }
+        }
+
+        /* ===== PARALLAX ===== */
+        document.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth - 0.5) * 2;
+            document.getElementById('mt-far').style.transform = `translateX(${x * 5}px)`;
+            document.getElementById('mt-mid').style.transform = `translateX(${x * 10}px)`;
+            document.getElementById('mt-near').style.transform = `translateX(${x * 15}px)`;
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 1) {
+                const x = (e.touches[0].clientX / window.innerWidth - 0.5) * 2;
+                document.getElementById('mt-far').style.transform = `translateX(${x * 3}px)`;
+                document.getElementById('mt-mid').style.transform = `translateX(${x * 6}px)`;
+                document.getElementById('mt-near').style.transform = `translateX(${x * 9}px)`;
+            }
+        }, { passive: true });
+
+        /* ===== CONQUISTAS ===== */
+        function unlockAchievement(name, emoji) {
+            if (achievements.includes(name)) return;
+            achievements.push(name);
+            showEvent(emoji, `Conquista: ${name}!`);
+            playSound('mood');
+        }
+
+        /* ===== GAME OVER ===== */
         function gameOver(id) {
             const name = id == 1 ? "Árvore Pai" : "Bebé";
-            alert(`A ${name} morreu! Precisas de cuidar de toda a família.`);
+            document.getElementById('gameover-msg').textContent = `A ${name} adoecceu. Às vezes precisamos de ajuda para continuar. Não desistas — pedir ajuda é um ato de coragem e empatia.`;
+            document.getElementById('gameover-modal').style.display = 'flex';
+            clearInterval(gameInterval);
+            clearInterval(particleInterval);
+        }
+
+        function restartGame() {
             location.reload();
         }
 
-        let mgInterval;
-        function startMiniGame() {
+        /* ===== MINIGAMES ===== */
+        function openMiniGameMenu() {
             const ov = document.getElementById('minigame-overlay');
-            const cv = document.getElementById('mg-canvas');
             ov.style.display = 'flex';
-            cv.innerHTML = '';
-            mgInterval = setInterval(() => {
-                const s = document.createElement('div');
-                s.className = 'mg-star';
-                s.innerText = '⭐';
-                s.style.left = Math.random() * 280 + 'px';
-                s.style.top = '-50px';
-                const capture = (e) => {
-                    e.stopPropagation();
-                    s.remove();
-                    trees[selectedId].mood = Math.min(100, trees[selectedId].mood + 5);
-                    updateHUD();
-                };
-                s.onmousedown = capture;
-                s.ontouchstart = capture;
-                cv.appendChild(s);
-                setTimeout(() => { if(s.parentNode) s.remove(); }, 2500);
-            }, 700);
+            document.getElementById('mg-menu').style.display = 'block';
+            document.getElementById('mg-canvas').style.display = 'none';
+            document.getElementById('mg-memory').style.display = 'none';
+            document.getElementById('mg-music').style.display = 'none';
+            document.getElementById('mg-difficulty').style.display = 'none';
+            document.getElementById('mg-title').textContent = '🎮 Escolhe um Jogo!';
+            document.getElementById('mg-score').textContent = '';
+            document.getElementById('mg-timer').textContent = '';
+            playSound('click');
         }
 
         function closeMiniGame() {
             clearInterval(mgInterval);
+            clearInterval(mgTimerInterval);
+            if (starAnimFrame) cancelAnimationFrame(starAnimFrame);
             document.getElementById('minigame-overlay').style.display = 'none';
+            document.getElementById('mg-canvas').innerHTML = '';
+            playSound('click');
         }
+
+        /* --- Minigame 1: Estrelas --- */
+        let starScore = 0;
+        let starTimeLeft = 30;
+        let starAnimFrame = null;
+        let starFallSpeed = 1.5; // pixels por frame
+
+        function startStarGame() {
+            document.getElementById('mg-menu').style.display = 'none';
+            document.getElementById('mg-canvas').style.display = 'block';
+            document.getElementById('mg-canvas').innerHTML = '';
+            document.getElementById('mg-title').textContent = '⭐ Apanha as Estrelas!';
+            starScore = 0;
+            starTimeLeft = 30;
+            starFallSpeed = 1.5;
+            document.getElementById('mg-score').textContent = 'Pontos: 0';
+            document.getElementById('mg-timer').textContent = 'Tempo: 30s';
+
+            const canvas = document.getElementById('mg-canvas');
+            const canvasH = canvas.offsetHeight;
+
+            mgInterval = setInterval(() => {
+                const isGolden = Math.random() < 0.15;
+                const isRotten = !isGolden && Math.random() < 0.12;
+                const s = document.createElement('div');
+                s.className = 'mg-star' + (isRotten ? ' mg-rotten' : '');
+                s.textContent = isRotten ? '🍎' : (isGolden ? '🌟' : '⭐');
+                s.style.left = Math.random() * (canvas.offsetWidth - 50) + 'px';
+                s.style.top = '-50px';
+                if (isGolden) s.style.filter = 'brightness(1.3) drop-shadow(0 0 8px gold)';
+
+                s.dataset.y = -50;
+                s.dataset.golden = isGolden ? '1' : '0';
+                s.dataset.rotten = isRotten ? '1' : '0';
+                s.dataset.alive = '1';
+
+                const capture = (e) => {
+                    e.stopPropagation();
+                    if (s.dataset.alive === '0') return;
+                    s.dataset.alive = '0';
+                    s.remove();
+                    if (isRotten) {
+                        starScore = Math.max(0, starScore - 3);
+                        playSound('wrong');
+                    } else {
+                        starScore += isGolden ? 3 : 1;
+                        playSound('star');
+                    }
+                    document.getElementById('mg-score').textContent = 'Pontos: ' + starScore;
+                };
+                s.onmousedown = capture;
+                s.ontouchstart = (e) => { e.preventDefault(); capture(e); };
+
+                canvas.appendChild(s);
+            }, 650);
+
+            // Animacao de queda via JS
+            function animateStars() {
+                const stars = canvas.querySelectorAll('.mg-star');
+                stars.forEach(s => {
+                    if (s.dataset.alive === '0') return;
+                    let y = parseFloat(s.dataset.y) + starFallSpeed;
+                    s.dataset.y = y;
+                    s.style.top = y + 'px';
+                    if (y > canvasH + 20) {
+                        s.dataset.alive = '0';
+                        s.remove();
+                    }
+                });
+                starAnimFrame = requestAnimationFrame(animateStars);
+            }
+            starAnimFrame = requestAnimationFrame(animateStars);
+
+            mgTimerInterval = setInterval(() => {
+                starTimeLeft--;
+                document.getElementById('mg-timer').textContent = 'Tempo: ' + starTimeLeft + 's';
+                if (starTimeLeft % 10 === 0) starFallSpeed += 0.3;
+                if (starTimeLeft <= 0) {
+                    clearInterval(mgInterval);
+                    clearInterval(mgTimerInterval);
+                    cancelAnimationFrame(starAnimFrame);
+                    endStarGame();
+                }
+            }, 1000);
+        }
+
+        function endStarGame() {
+            const bonus = Math.floor(starScore / 2);
+            trees[selectedId].mood = Math.min(100, trees[selectedId].mood + bonus);
+            updateHUD();
+            document.getElementById('mg-canvas').innerHTML = `<div style="color:white;text-align:center;padding:40px;font-size:18px;"><p>⭐ ${starScore} pontos!</p><p style="font-size:14px;margin-top:8px;">Humor +${bonus}</p></div>`;
+            document.getElementById('mg-timer').textContent = '';
+            playSound('mood');
+        }
+
+        /* --- Minigame 2: Memoria --- */
+        let memoryCards = [];
+        let flippedCards = [];
+        let memoryMatches = 0;
+        let memoryLocked = false;
+        let memoryTotalPairs = 8;
+        let memoryTimeLeft = 0;
+        let memoryDifficulty = 'medium';
+        const memoryEmojisAll = ['❤️', '🌻', '🌈', '🦋', '⭐', '🌳', '💧', '☀️', '🍀', '🌺'];
+
+        function startMemoryGame() {
+            // Mostrar seletor de dificuldade
+            document.getElementById('mg-menu').style.display = 'none';
+            document.getElementById('mg-difficulty').style.display = 'block';
+            document.getElementById('mg-title').textContent = '🧠 Memória das Emoções';
+            document.getElementById('mg-score').textContent = 'Escolhe a dificuldade:';
+            document.getElementById('mg-timer').textContent = '';
+            playSound('click');
+        }
+
+        function startMemoryWithDifficulty(diff) {
+            memoryDifficulty = diff;
+            document.getElementById('mg-difficulty').style.display = 'none';
+            document.getElementById('mg-memory').style.display = 'block';
+
+            let pairsCount, timeLimit;
+            if (diff === 'easy') { pairsCount = 6; timeLimit = 0; }
+            else if (diff === 'medium') { pairsCount = 8; timeLimit = 60; }
+            else { pairsCount = 10; timeLimit = 45; }
+
+            memoryTotalPairs = pairsCount;
+            memoryTimeLeft = timeLimit;
+
+            const emojis = memoryEmojisAll.slice(0, pairsCount);
+            const pairs = [...emojis, ...emojis];
+            memoryCards = shuffle(pairs);
+            flippedCards = [];
+            memoryMatches = 0;
+            memoryLocked = false;
+
+            document.getElementById('mg-score').textContent = `Pares: 0/${pairsCount}`;
+
+            const grid = document.getElementById('memory-grid');
+            grid.innerHTML = '';
+            grid.className = 'memory-grid ' + (diff === 'easy' ? 'easy' : diff === 'hard' ? 'hard' : '');
+
+            if (timeLimit > 0) {
+                document.getElementById('mg-timer').textContent = 'Tempo: ' + timeLimit + 's';
+                clearInterval(mgTimerInterval);
+                mgTimerInterval = setInterval(() => {
+                    memoryTimeLeft--;
+                    document.getElementById('mg-timer').textContent = 'Tempo: ' + memoryTimeLeft + 's';
+                    if (memoryTimeLeft <= 0) {
+                        clearInterval(mgTimerInterval);
+                        memoryLocked = true;
+                        setTimeout(() => {
+                            const bonus = memoryMatches * 2;
+                            trees[selectedId].mood = Math.min(100, trees[selectedId].mood + bonus);
+                            updateHUD();
+                            showEvent('🧠', `Tempo esgotado! ${memoryMatches} pares. Humor +${bonus}`);
+                            playSound('mood');
+                            document.getElementById('mg-memory').style.display = 'none';
+                            document.getElementById('mg-menu').style.display = 'block';
+                        }, 500);
+                    }
+                }, 1000);
+            } else {
+                document.getElementById('mg-timer').textContent = '';
+            }
+
+            memoryCards.forEach((emoji, i) => {
+                const card = document.createElement('div');
+                card.className = 'memory-card';
+                card.dataset.index = i;
+                card.dataset.emoji = emoji;
+                card.innerHTML = `<div class="card-front">${emoji}</div><div class="card-back">❓</div>`;
+                card.onclick = () => flipCard(card);
+                grid.appendChild(card);
+            });
+        }
+
+        function flipCard(card) {
+            if (memoryLocked || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+            playSound('click');
+            card.classList.add('flipped');
+            flippedCards.push(card);
+
+            if (flippedCards.length === 2) {
+                memoryLocked = true;
+                const [a, b] = flippedCards;
+                if (a.dataset.emoji === b.dataset.emoji) {
+                    a.classList.add('matched');
+                    b.classList.add('matched');
+                    memoryMatches++;
+                    playSound('match');
+                    document.getElementById('mg-score').textContent = `Pares: ${memoryMatches}/${memoryTotalPairs}`;
+                    flippedCards = [];
+                    memoryLocked = false;
+
+                    if (memoryMatches === memoryTotalPairs) {
+                        clearInterval(mgTimerInterval);
+                        setTimeout(() => {
+                            const bonus = memoryDifficulty === 'easy' ? 15 : memoryDifficulty === 'medium' ? 25 : 35;
+                            trees[selectedId].mood = Math.min(100, trees[selectedId].mood + bonus);
+                            updateHUD();
+                            showEvent('🧠', `Memória completa! Humor +${bonus}`);
+                            playSound('mood');
+                        }, 500);
+                    }
+                } else {
+                    playSound('wrong');
+                    setTimeout(() => {
+                        a.classList.remove('flipped');
+                        b.classList.remove('flipped');
+                        flippedCards = [];
+                        memoryLocked = false;
+                    }, 800);
+                }
+            }
+        }
+
+        function shuffle(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        /* --- Minigame 3: Musical (Simon-says) --- */
+        const musicNotes = [
+            { emoji: '🌸', color: '#e91e63', freq: 523 },
+            { emoji: '🌻', color: '#ff9800', freq: 587 },
+            { emoji: '🌷', color: '#9c27b0', freq: 659 },
+            { emoji: '🌹', color: '#f44336', freq: 698 },
+            { emoji: '🌺', color: '#e91e63', freq: 784 },
+        ];
+        let musicSequence = [];
+        let musicPlayerIndex = 0;
+        let musicPlaying = false;
+        let musicLevel = 0;
+
+        function startMusicGame() {
+            document.getElementById('mg-menu').style.display = 'none';
+            document.getElementById('mg-music').style.display = 'block';
+            document.getElementById('mg-title').textContent = '🎵 Jardim Musical';
+            document.getElementById('mg-score').textContent = '';
+            musicLevel = 0;
+
+            const container = document.getElementById('music-flowers');
+            container.innerHTML = '';
+            musicNotes.forEach((n, i) => {
+                const flower = document.createElement('div');
+                flower.className = 'music-flower';
+                flower.style.background = n.color;
+                flower.style.color = n.color;
+                flower.textContent = n.emoji;
+                flower.dataset.index = i;
+                flower.onclick = () => musicFlowerClick(i);
+                container.appendChild(flower);
+            });
+
+            musicSequence = [];
+            musicLevel = 0;
+            document.getElementById('music-instructions').textContent = 'Observa a sequência...';
+            setTimeout(() => musicNextRound(), 800);
+        }
+
+        function musicNextRound() {
+            musicLevel++;
+            musicSequence.push(Math.floor(Math.random() * musicNotes.length));
+            musicPlayerIndex = 0;
+            musicPlaying = true;
+            document.getElementById('mg-score').textContent = 'Nível: ' + musicLevel;
+            document.getElementById('music-instructions').textContent = 'Observa a sequência...';
+            playMusicSequence();
+        }
+
+        function playMusicSequence() {
+            let i = 0;
+            const interval = setInterval(() => {
+                if (i > 0) musicUnhighlight(musicSequence[i - 1]);
+                if (i >= musicSequence.length) {
+                    clearInterval(interval);
+                    musicPlaying = false;
+                    document.getElementById('music-instructions').textContent = 'Repete a sequência!';
+                    return;
+                }
+                musicHighlight(musicSequence[i]);
+                playTone(musicNotes[musicSequence[i]].freq, 0.3, 'sine', 0.2);
+                i++;
+            }, 600);
+        }
+
+        function musicHighlight(idx) {
+            document.querySelectorAll('.music-flower')[idx].classList.add('glow');
+        }
+        function musicUnhighlight(idx) {
+            document.querySelectorAll('.music-flower')[idx].classList.remove('glow');
+        }
+
+        function musicFlowerClick(idx) {
+            if (musicPlaying) return;
+            playSound('click');
+            musicHighlight(idx);
+            setTimeout(() => musicUnhighlight(idx), 300);
+            playTone(musicNotes[idx].freq, 0.2, 'sine', 0.15);
+
+            if (idx === musicSequence[musicPlayerIndex]) {
+                musicPlayerIndex++;
+                if (musicPlayerIndex >= musicSequence.length) {
+                    // Acertou a sequencia
+                    playSound('match');
+                    if (musicLevel >= 8) {
+                        // Ganhou!
+                        const bonus = 30;
+                        trees[selectedId].mood = Math.min(100, trees[selectedId].mood + bonus);
+                        updateHUD();
+                        showEvent('🎵', `Jardim Musical completo! Nível ${musicLevel}! Humor +${bonus}`);
+                        playSound('mood');
+                        document.getElementById('music-instructions').textContent = `Completaste o nível ${musicLevel}!`;
+                    } else {
+                        setTimeout(() => musicNextRound(), 800);
+                    }
+                }
+            } else {
+                // Errou
+                playSound('wrong');
+                const bonus = Math.max(1, musicLevel * 2);
+                trees[selectedId].mood = Math.min(100, trees[selectedId].mood + bonus);
+                updateHUD();
+                showEvent('🎵', `Sequência até nível ${musicLevel}! Humor +${bonus}`);
+                document.getElementById('music-instructions').textContent = `Fim! Alcançaste o nível ${musicLevel}.`;
+                musicPlaying = true; // Bloquear input
+            }
+        }
+
+        /* ===== INICIALIZACAO ===== */
     </script>
 </body>
 </html>
